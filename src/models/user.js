@@ -1,14 +1,21 @@
 const mongoose = require("mongoose");
+const validator = require("validator");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt")
+
 const userSchema = mongoose.Schema({
     firstName: {
         type: String,
         required: true,
-        minLength: 5,
-        maxLength: 50,
+        index: true,
+        minLength: 4,
+        maxLength: 10,
     },
 
     lastName: {
-        type: String
+        type: String,
+        minLength: 3,
+        maxLength: 50,
     },
     email: {
         type: String,
@@ -16,15 +23,26 @@ const userSchema = mongoose.Schema({
         unique: true,
         trim: true,
         // if email allready exits then throws error
+        validate(value) {
+            if (!validator.isEmail(value)) {
+                throw new Error("Invalid Email address" + value)
+            }
+        }
     },
     password: {
         type: String,
-        required: true
+        required: true,
+        validate(value) {
+            if (!validator.isStrongPassword(value)) {
+                throw new Error("enter a strong password" + value)
+            }
+        }
+
     },
     age: {
         type: Number,
         min: 18,
-        
+
     },
     gender: {
 
@@ -40,8 +58,15 @@ const userSchema = mongoose.Schema({
     },
     photoUrl: {
 
+
         type: String,
-        default: "https://actuariesindia.org/sites/default/files/2023-01/dummy-profile-pic.jpg"
+
+        default: "https://actuariesindia.org/sites/default/files/2023-01/dummy-profile-pic.jpg",
+        validate(value) {
+            if (!validator.isURL(value)) {
+                throw new Error("Invalid Photo URL" + value)
+            }
+        }
     },
     about: {
 
@@ -55,5 +80,24 @@ const userSchema = mongoose.Schema({
 
     },
 );
+userSchema.methods.getJWT = async function () {
+    const user = this;
+    const token = await jwt.sign({ _id: user._id }, "DEV@TINDER$8707544882", {
+        expiresIn: "1d"
+
+    });
+    return token;
+
+
+};
+userSchema.methods.validatePassword = async function (passwordInputByUser) {
+    const user = this;
+    const passwordHash = user.password;
+    const isPasswordValid = await bcrypt.compare(
+        passwordInputByUser,
+        passwordHash
+    );
+    return isPasswordValid
+}
 
 module.exports = mongoose.model("User", userSchema)

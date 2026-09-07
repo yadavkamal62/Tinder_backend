@@ -1,13 +1,1 @@
 node_modules/
-dist/
-.env
-npm-debug.log*
-.DS_Store
-.vscode/
-coverage/
-/.nyc_output
-logs/
-*.log
-/.idea/
-Thumbs.db
-/.parcel-cache/
